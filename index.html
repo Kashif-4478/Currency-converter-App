@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Currency Converter</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+    <script src="https://cdn.emailjs.com/dist/email.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f8f8f8; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; }
+        .logo { color: #0077be; font-size: 24px; font-weight: bold; }
+        nav a { margin-left: 20px; text-decoration: none; color: #333; }
+        .book-now { background-color: #0077be; color: white; padding: 10px 20px; border-radius: 5px; }
+        main { display: flex; justify-content: space-between; margin-top: 50px; }
+        .content { width: 50%; }
+        .converter { width: 40%; background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .converter-form { background-color: rgba(255, 255, 255, 0.9); padding: 20px; border-radius: 5px; }
+        .input-group { display: flex; margin-bottom: 15px; }
+        .input-group input, .input-group select { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin-right: 5px; }
+        .place-order { background-color: #0077be; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; width: 100%; }
+        .booking-confirmation { background-color: white; width: 80%; max-width: 600px; margin: 20px auto; padding: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); border-radius: 8px; display: none; }
+        .header { background-color: #0077BE; color: white; padding: 20px; font-size: 24px; text-align: center; border-top-left-radius: 8px; border-top-right-radius: 8px; }
+        .form-content { padding: 20px; }
+        .form-content .form-group { margin-bottom: 15px; }
+        .form-content label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-content input[type="text"], .form-content input[type="email"], .form-content input[type="tel"], .form-content select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        .form-content .input-group input[type="number"] { width: calc(50% - 10px); margin-right: 20px; }
+        .form-content .input-group div { width: 48%; display: inline-block; vertical-align: top; }
+        .payment-methods { margin: 10px 0; }
+        .payment-methods label { margin-right: 20px; display: inline-block; cursor: pointer; }
+        input[type="radio"] { margin-right: 5px; }
+        .confirm-button { width: 100%; padding: 12px; border: none; background-color: #0077BE; color: white; font-size: 16px; margin-top: 20px; border-radius: 4px; cursor: pointer; }
+        .confirm-button:hover { background-color: #0056b3; }
+        #rate_info { font-size: 9px; }
+        @media (max-width: 768px) {
+            .form-content .input-group input[type="number"] { width: 100%; margin: 5px 0; }
+            .form-content .input-group div { width: 100%; }
+        }
+        .select2-container--default .select2-selection--single {
+            padding-left: 30px;
+        }
+        .select2-results__option {
+            padding-left: 30px !important;
+        }
+        .flag-icon {
+            width: 30px;
+            height: 20px;
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">Currency Exchange</div>
+            <nav>
+                <a href="#">Services</a>
+                <a href="#">About</a>
+                <a href="#">Contact</a>
+                <a href="#" class="book-now">Book now</a>
+            </nav>
+        </header>
+        <main id="page1">
+            <div class="content">
+                <h1>Quickly get the latest exchange rates and a quote with our Currency Converter.</h1>
+                <p>Get an instant quote and the latest exchange rates with our Currency Converter. Whether you're planning to exchange your money or simply keeping track of exchange rates, our tool ensures you always have the most accurate and up-to-date information. Simplify your currency exchanges and make informed decisions with ease, all in real time.</p>
+            </div>
+            <div class="converter">
+                <h2>Buy Foreign Currency</h2>
+                <div class="converter-form">
+                    <div class="input-group">
+                        <input type="number" id="amount_send" placeholder="Amount to Send">
+                        <select id="from_currency"></select>
+                    </div>
+                    <div class="input-group">
+                        <input type="number" id="amount_receive" placeholder="Amount to Receive" disabled>
+                        <select id="to_currency"></select>
+                    </div>
+                    <p id="rate_info" class="rate-info">1 CAD = 0.7308 USD No Fees Best Rate Guarantee</p>
+                    <button class="place-order" onclick="switchToConfirmation()">Place Order</button>
+                </div>
+            </div>
+        </main>
+        <div id="page2" class="booking-confirmation">
+            <div class="header">Booking Confirmation</div>
+            <div class="form-content">
+                <form id="bookingForm">
+                    <div class="form-group">
+                        <label for="first_name">First Name</label>
+                        <input type="text" id="first_name" placeholder="First Name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="last_name">Last Name</label>
+                        <input type="text" id="last_name" placeholder="Last Name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" placeholder="Email (required)" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">Phone</label>
+                        <input type="tel" id="phone" placeholder="Phone (required)" required>
+                    </div>
+                    <div class="form-group payment-methods">
+                        <label><input type="radio" name="payment_method" value="Cash" checked> Cash</label>
+                        <label id="interacOption"><input type="radio" name="payment_method" value="Interac"> Interac</label>
+                        <label><input type="radio" name="payment_method" value="BillPay"> Bill Pay</label>
+                    </div>
+                    <div class="form-group">
+                        <label for="pickup_location">Pickup Location</label>
+                        <select id="pickup_location" required>
+                            <option value="">Select an option</option>
+                            <option value="Location1">Location 1</option>
+                            <option value="Location2">Location 2</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <div>
+                            <label for="send_amount">Send Amount</label>
+                            <input type="number" id="send_amount" placeholder="Send" readonly>
+                        </div>
+                        <div>
+                            <label for="transaction_fees">Transaction Fees</label>
+                            <input type="number" id="transaction_fees" placeholder="Transaction fees" readonly>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <div>
+                            <label for="receive_amount">Receive Amount</label>
+                            <input type="number" id="receive_amount" placeholder="Receive" readonly>
+                        </div>
+                        <div>
+                            <label for="total_amount">Total Amount</label>
+                            <input type="number" id="total_amount" placeholder="Total" readonly>
+                        </div>
+                    </div>
+                    <button type="submit" class="confirm-button">CONFIRM AND PLACE ORDER</button>
+                </form>
+            </div>
+        </div>
+        <script>
+    function switchToConfirmation() {
+        document.getElementById('page1').style.display = 'none';
+        document.getElementById('page2').style.display = 'block';
+    }
+
+    function confirmOrder() {
+        alert('Order Confirmed!');
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const fromCurrencySelect = document.getElementById('from_currency');
+        const toCurrencySelect = document.getElementById('to_currency');
+        const amountSendInput = document.getElementById('amount_send');
+        const amountReceiveInput = document.getElementById('amount_receive');
+        const rateInfo = document.getElementById('rate_info');
+        const placeOrderButton = document.querySelector('.place-order');
+        const page1 = document.getElementById('page1');
+        const page2 = document.getElementById('page2');
+        const interacOption = document.getElementById('interacOption');
+
+        page2.style.display = 'none';
+
+        fetch('https://api.frankfurter.app/currencies')
+            .then(response => response.json())
+            .then(data => {
+                populateCurrencyOptions(data, fromCurrencySelect);
+                populateCurrencyOptions(data, toCurrencySelect);
+            });
+
+        function populateCurrencyOptions(data, selectElement) {
+            Object.entries(data).forEach(([code, name]) => {
+                const countryCode = getCountryCode(code);
+                const flagUrl = countryCode ? `https://flagsapi.com/${countryCode}/flat/32.png` : '';
+                const option = document.createElement('option');
+                option.className = 'flag-option';
+                option.value = code;
+                option.textContent = `${code} - ${name}`;
+                selectElement.appendChild(option);
+            });
+
+            $(selectElement).select2({
+                templateResult: formatOption,
+                templateSelection: formatOption
+            });
+        }
+
+        function formatOption(option) {
+            if (!option.element) {
+                return option.text;
+            }
+            const countryCode = getCountryCode(option.element.value);
+            const flagUrl = `https://flagsapi.com/${countryCode}/flat/32.png`;
+            return $(`<span><img src="${flagUrl}" class="flag-icon" onerror="this.src='path/to/placeholder-flag.png';" /> ${option.text}</span>`);
+        }
+
+        function getCountryCode(currencyCode) {
+            const currencyToCountry = {
+                'USD': 'US', 'EUR': 'EU', 'JPY': 'JP', 'GBP': 'GB', 'AUD': 'AU', 'CAD': 'CA',
+                'CHF': 'CH', 'CNY': 'CN', 'SEK': 'SE', 'NZD': 'NZ', 'MXN': 'MX', 'SGD': 'SG',
+                'HKD': 'HK', 'NOK': 'NO', 'KRW': 'KR', 'TRY': 'TR', 'RUB': 'RU', 'INR': 'IN',
+                'BRL': 'BR', 'ZAR': 'ZA', 'THB': 'TH', 'IDR': 'ID', 'PLN': 'PL', 'PHP': 'PH',
+                'BGN': 'BG', 'CZK': 'CZ', 'DKK': 'DK', 'HUF': 'HU', 'ILS': 'IL', 'ISK': 'IS'
+            };
+            return currencyToCountry[currencyCode] || currencyCode.slice(0, 2);
+        }
+
+        function updateConversion() {
+            const fromCurrency = fromCurrencySelect.value;
+            const toCurrency = toCurrencySelect.value;
+            const sendAmount = parseFloat(amountSendInput.value);
+            updatePaymentOptionVisibility(sendAmount);
+
+            if (fromCurrency && toCurrency && sendAmount > 0 && fromCurrency !== toCurrency) {
+                fetchExchangeRate(fromCurrency, toCurrency)
+                    .then(rate => {
+                        const receiveAmount = (sendAmount * rate).toFixed(2);
+                        amountReceiveInput.value = receiveAmount;
+                        rateInfo.textContent = `1 ${fromCurrency} = ${rate} ${toCurrency} No Fees Best Rate Guarantee`;
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        amountReceiveInput.value = '';
+                        rateInfo.textContent = 'Error fetching exchange rate';
+                    });
+            } else if (fromCurrency === toCurrency) {
+                amountReceiveInput.value = sendAmount;
+                rateInfo.textContent = `1 ${fromCurrency} = 1 ${toCurrency} (Same currency)`;
+            } else {
+                amountReceiveInput.value = '';
+                rateInfo.textContent = 'Please enter an amount and select currencies';
+            }
+        }
+
+        function updatePaymentOptionVisibility(amount) {
+            interacOption.style.display = amount >= 3000 ? 'none' : '';
+        }
+
+        fromCurrencySelect.addEventListener('change', updateConversion);
+        toCurrencySelect.addEventListener('change', updateConversion);
+        amountSendInput.addEventListener('input', updateConversion);
+
+        placeOrderButton.addEventListener('click', function() {
+            const sendAmount = parseFloat(amountSendInput.value);
+            const fromCurrency = fromCurrencySelect.value;
+            const toCurrency = toCurrencySelect.value;
+            fetch(`https://api.frankfurter.app/latest?amount=1&from=${fromCurrency}&to=${toCurrency}`)
+                .then(response => response.json())
+                .then(data => {
+                    const rate = data.rates[toCurrency];
+                    const receiveAmount = sendAmount * rate;
+                    const transactionFees = sendAmount * 0.13;
+                    const totalAmount = sendAmount + transactionFees;
+
+                    document.getElementById('send_amount').value = sendAmount.toFixed(2);
+                    document.getElementById('transaction_fees').value = transactionFees.toFixed(2);
+                    document.getElementById('receive_amount').value = receiveAmount.toFixed(2);
+                    document.getElementById('total_amount').value = totalAmount.toFixed(2);
+
+                    page1.style.display = 'none';
+                    page2.style.display = 'block';
+                });
+        });
+
+        // EmailJS initialization
+        (function() {
+            emailjs.init("CCDWtjfJ4qkklYBbg");
+        })();
+
+        document.getElementById('bookingForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const firstName = document.getElementById('first_name').value;
+            const lastName = document.getElementById('last_name').value;
+            const email = document.getElementById('email').value;
+            const phone = document.getElementById('phone').value;
+            const pickupLocation = document.getElementById('pickup_location').value;
+            const sendAmount = document.getElementById('send_amount').value;
+            const receiveAmount = document.getElementById('receive_amount').value;
+            const fromCurrency = fromCurrencySelect.value;
+            const toCurrency = toCurrencySelect.value;
+
+            const templateParams = {
+                to_name: `${firstName} ${lastName}`,
+                to_email: email,
+                sendAmount,
+                fromCurrency,
+                receiveAmount,
+                toCurrency,
+                pickupLocation
+            };
+
+            emailjs.send('service_go9gkpg', 'template_7c9irl8', templateParams)
+                .then(function(response) {
+                    console.log('SUCCESS!', response.status, response.text);
+                    alert("Thank you for submitting your currency exchange order!");
+                }, function(error) {
+                    console.log('FAILED...', error);
+                    alert("Failed to send email.");
+                });
+        });
+
+        // Form validation for email and phone
+        document.getElementById('email').addEventListener('input', function() {
+            const email = this.value;
+            const isValid = email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
+            if (!isValid) {
+                this.setCustomValidity("Please enter a valid email address.");
+            } else {
+                this.setCustomValidity("");
+            }
+        });
+
+        document.getElementById('phone').addEventListener('input', function() {
+            const phone = this.value;
+            const isValid = phone.match(/^\+?\d{10,15}$/);
+            if (!isValid) {
+                this.setCustomValidity("Please enter a valid phone number.");
+            } else {
+                this.setCustomValidity("");
+            }
+        });
+    });
+
+    function fetchExchangeRate(fromCurrency, toCurrency) {
+        return fetch(`https://api.frankfurter.app/latest?from=${fromCurrency}&to=${toCurrency}`)
+            .then(response => response.json())
+            .then(data => data.rates[toCurrency]);
+    }
+</script>
+    </div>
+</body>
+</html>
