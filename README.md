@@ -1,2 +1,2 @@
 # Currency-converter-App
-An application for converting currencies using vanilla js
+An application for interconverting currencies using vanilla js
